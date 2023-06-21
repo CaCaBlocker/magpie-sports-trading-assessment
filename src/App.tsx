@@ -5,20 +5,23 @@ import {Card, CardData} from './types/types';
 
 import getMarketPriceData from './services/getMarketPriceData';
 
+
 function App() {
 
   const [CardData, setPriceData] = useState<CardData | null>(null);
+
+  const convertToNumber = (priceString: string):number => Number(priceString.slice(1).split(',').join(''));
+  const convertToPrice = (price: number): string => "$" + price.toFixed(2);
 
   useEffect(() => {
     const fetchData = async () => {
       return await getMarketPriceData()
     };
 
-    const convertToNumber = (priceString: string):number => Number(priceString.slice(1))
-
     fetchData()
       .then((data: Card[]) => {
         const _cardData: CardData = {};
+        //  Filter Data
         for (const card of data) {
           if (card.cardName in _cardData) {
             _cardData[card.cardName].prices.push({txnDate: card.txnDate, price: convertToNumber(card.price)});
@@ -29,24 +32,66 @@ function App() {
                 grade: card.grade,
                 gradingCompany: card.gradingCompany,
                 pricingSource: card.pricingSource,
-
+                averagePrice: 0,
+                peakPrice: 0,
+                peakDate: "",
+                standardDeviation: 0,
+                lowerBound: 0,
+                upperBound: 0
               },
               prices: [{txnDate: card.txnDate, price: convertToNumber(card.price)}]
             }
           }
+        }
+        //  Add special data 
+        for (let cardName in _cardData) {
+          let average = 0;
+          let peakPrice = 0;
+          let peakDate = "";
+          let lowerBound = _cardData[cardName].prices[0] ? _cardData[cardName].prices[0].price : 0;
+          // let upperBound = 0;
+          for (let price of _cardData[cardName].prices) {
+            average += price.price;
+
+            if (peakPrice < price.price) {
+              peakPrice = price.price;
+              peakDate = price.txnDate;
+            }
+
+            if (lowerBound > price.price) {
+              lowerBound = price.price;
+            }
+          }
+          //  Add average
+          //  Add lower bound
+          _cardData[cardName].data.lowerBound = lowerBound;
+          //  Add upper bound
+          _cardData[cardName].data.upperBound = peakPrice;
+          average /= _cardData[cardName].prices.length;
+          _cardData[cardName].data.averagePrice = average;
+          //  Add standard deviation
+          let tempSum = 0;
+          for (let price of _cardData[cardName].prices) {
+            tempSum += Math.pow(price.price - average, 2);
+          }
+          _cardData[cardName].data.standardDeviation = Math.sqrt(tempSum / (_cardData[cardName].prices.length > 2 ? _cardData[cardName].prices.length - 1 : 1));
+          //  Add peak price
+          _cardData[cardName].data.peakPrice = peakPrice;
+          //  Add peak date
+          _cardData[cardName].data.peakDate = peakDate;
         }
         setPriceData(_cardData);
       })
       .catch((err) => {
         console.error(err);
       })
-  }, [CardData])
+  }, [])
   
   return (
     <div className="App">
       {
         CardData === null 
-        ? <h1>No Data</h1> 
+        ? <h1>Loading...</h1> 
         : <div>
           <table>
             <thead>
@@ -71,6 +116,12 @@ function App() {
                   <td>{CardData[cardName].data.grade}</td>
                   <td>{CardData[cardName].data.gradingCompany}</td>
                   <td>{CardData[cardName].data.pricingSource}</td>
+                  <td>{convertToPrice(CardData[cardName].data.averagePrice)}</td>
+                  <td>{convertToPrice(CardData[cardName].data.lowerBound)}</td>
+                  <td>{convertToPrice(CardData[cardName].data.upperBound)}</td>
+                  <td>{convertToPrice(CardData[cardName].data.standardDeviation)}</td>
+                  <td>{convertToPrice(CardData[cardName].data.peakPrice)}</td>
+                  <td>{CardData[cardName].data.peakDate}</td>
                 </tr>
               ))
             }

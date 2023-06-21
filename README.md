@@ -16,3 +16,7 @@ Given a set of market pricing data (found here: mocki.io/v1/70f45519-0232-463b-b
 - Displays the collated data in a readable format for the user. (React UI)
 - Provides a React UI for the user to download the transformed data in their choice of the following formats: JSON, CSV, or .xlsx.
 
+##  Tips for calculating special data
+
+### Standard Deviation
+- https://www.wikihow.com/Calculate-Standard-Deviation
