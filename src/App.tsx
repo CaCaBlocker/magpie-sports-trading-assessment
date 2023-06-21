@@ -5,13 +5,11 @@ import {Card, CardData} from './types/types';
 
 import getMarketPriceData from './services/getMarketPriceData';
 
+import {convertToNumber, convertToPrice} from './utils/price'
 
 function App() {
 
   const [CardData, setPriceData] = useState<CardData | null>(null);
-
-  const convertToNumber = (priceString: string):number => Number(priceString.slice(1).split(',').join(''));
-  const convertToPrice = (price: number): string => "$" + price.toFixed(2);
 
   useEffect(() => {
     const fetchData = async () => {
