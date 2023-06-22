@@ -13,3 +13,14 @@ td, th {
 tr:nth-child(even) {
   background-color: #dddddd;
 }
+
+#buttonGroup {
+  margin: 15px 10px;
+  display: flex;
+  justify-content: right;
+}
+
+#buttonGroup button {
+  margin: 5px;
+  padding: 5px;
+}
